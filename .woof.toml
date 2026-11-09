@@ -1,0 +1,26 @@
+ignore_paths = [
+    ".env",
+    ".env.development.local",
+    ".env.local",
+    ".env.production.local",
+    ".env.test.local",
+    ".env/",
+    ".git/",
+    ".next/",
+    ".venv/",
+    "coverage/",
+    "docs/",
+    "node_modules/",
+    "out/",
+    "target/",
+    "tests/",
+    "venv/",
+    "src/components/home/home-data.ts",
+    "src/components/home/scan-samples.ts",
+    "src/components/playground/playground-data.ts",
+    "src/components/build-toml-explorer.tsx",
+    "src/app/blog/rustywoof-devs-best-friend/page.mdx",
+    "tests/wasm.test.ts"
+]
+custom_rules = []
+min_entropy = 3.0
