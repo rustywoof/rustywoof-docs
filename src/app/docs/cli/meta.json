@@ -1,0 +1,18 @@
+{
+	"title": "CLI Reference",
+	"pages": [
+		"index",
+		"init",
+		"scan",
+		"audit",
+		"hook",
+		"patrol",
+		"sniff",
+		"remediate",
+		"cache",
+		"update",
+		"generate",
+		"check",
+		"version"
+	]
+}

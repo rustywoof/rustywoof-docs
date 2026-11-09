@@ -1,0 +1,31 @@
+---
+title: "Configuration Overview"
+description: "Learn how to generate and customize .woof.toml to share scan settings across your team and CI."
+---
+
+Rustywoof works out of the box without any configuration file. When you run `woof scan` or `woof audit` in a project for the first time, it uses sensible defaults for entropy thresholds, built-in token prefixes, and lockfile detection.
+
+As your project grows, you will likely want to:
+- Skip build folders or generated bundles (such as `dist/`, `target/`, or `coverage/`).
+- Ignore harmless dummy keys inside unit test fixtures.
+- Add custom detection rules for your company's internal API tokens.
+- Set the minimum vulnerability severity (`low`, `medium`, `high`, or `critical`) that should fail CI builds.
+
+All of these settings live in a single file at the root of your repository named **`.woof.toml`**.
+
+## Generate a Starter `.woof.toml`
+
+Run `woof init` at the root of your project:
+
+```bash
+woof init
+```
+
+<Callout type="info">
+	Commit .woof.toml to Git. Because .woof.toml only stores rules, folder exclusions, and false-positive suppressions—never real secrets—committing it guarantees that every developer's pre-commit hook and your CI runner enforce the exact same policy.
+</Callout>
+
+## Explore Configuration Domains
+
+* [Modify .woof.toml](/docs/configuration/woof-toml) - Adjust global settings, memory constraints, CVSS thresholds, and ignore paths.
+* [Design Custom Rules](/docs/configuration/custom-rules) - Define domain-specific regex patterns and leverage the Aho-Corasick engine to hunt for proprietary secrets.

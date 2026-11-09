@@ -1,0 +1,35 @@
+---
+title: "Core Concepts"
+description: "Understand how Rustywoof scans source code for secrets, audits lockfiles, and blocks leaks across your workflow."
+---
+
+When you run Rustywoof in a repository, it performs two distinct jobs: inspecting your source files for hardcoded credentials, and inspecting your lockfiles for known vulnerable packages.
+
+If you are new to security tooling, these three guides walk through how everything works in plain language:
+
+## 1. Secret Scanning (`woof scan` & `woof check`)
+
+Why does running regular expressions on every line of code slow down large projects, and how does Rustywoof scan 21,000 files in under three seconds?
+
+In [Secret Scanning](/docs/concepts/secret-scanning), you will learn:
+- How **prefix matching** (using an Aho-Corasick automaton) spots known key beginnings like `AKIA` or `ghp_` in a single pass.
+- How **linear-time regular expressions** verify the shape of a token without hanging on long lines.
+- What **Shannon entropy** is, and how measuring character randomness catches unprefixed secrets while ignoring dummy test values.
+
+## 2. Supply Chain Auditor (`woof audit`, `woof sniff` & `woof remediate`)
+
+Modern projects pull in hundreds of indirect dependencies. A vulnerability four levels deep in your dependency tree is just as risky as one in a package you imported directly.
+
+In [Supply Chain Auditor](/docs/concepts/supply-chain), you will learn:
+- Why Rustywoof reads **exact lockfiles** (`Cargo.lock`, `package-lock.json`, `pnpm-lock.yaml`, `uv.lock`, `poetry.lock`) instead of loose version ranges.
+- How batch queries to the **OSV database** work without leaking any private information about your code.
+- How to trace which parent package pulled in a vulnerable dependency using `woof sniff`.
+
+## 3. Workflow Checkpoints (`woof hook`, `woof check` & `woof patrol`)
+
+Finding a leaked key after it has been pushed to a public GitHub repository means you have to revoke and rotate that key immediately. Catching it before `git commit` takes five seconds to fix.
+
+In [Workflow Checkpoints](/docs/concepts/perimeter-defense), you will learn:
+- How to stop secrets on your laptop before a commit is created (`woof hook install`).
+- How to fail pull requests in CI when a secret or vulnerable package is introduced (`woof check`).
+- How to run scheduled sweeps on repositories that don't receive daily commits (`woof patrol`).

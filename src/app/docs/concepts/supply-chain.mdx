@@ -1,0 +1,94 @@
+---
+title: "Supply Chain Auditor"
+description: "How Rustywoof parses lockfiles across Rust, Node, and Python and queries the OSV vulnerability feed."
+---
+
+When you install a single package from npm, PyPI, or crates.io, that package often depends on dozens of other packages. Those indirect ("transitive") dependencies make up the majority of your project's code footprint.
+
+The **Supply Chain Auditor** (`woof audit`) inspects every package version installed in your project and checks it against the [Open Source Vulnerability (OSV)](https://osv.dev/) database.
+
+## What `woof audit` Looks For
+
+- **Known security advisories (CVEs & GHSAs):** Publicly reported bugs such as prototype pollution, path traversal, or denial-of-service flaws in older library versions.
+- **Compromised releases:** Versions of legitimate packages that were published after a maintainer's account or publishing token was stolen.
+- **Malicious packages:** Packages flagged and removed by ecosystem security teams for stealing credentials during install scripts.
+
+## Why Lockfiles Matter More Than Manifests
+
+Rustywoof does not audit loose version ranges like `"^1.4.0"` in your `Cargo.toml` or `package.json`, because a range does not tell you which exact version is currently installed. Instead, it reads your resolved lockfiles:
+
+- **Rust:** `Cargo.lock`
+- **Node.js / TypeScript:** `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`
+- **Python:** `uv.lock`, `poetry.lock`, `requirements.txt`
+
+By reading the lockfile, Rustywoof checks the exact version numbers running in production.
+
+## Privacy and Local OSV Caching
+
+When `woof audit` queries `api.osv.dev`, it sends a single batched HTTP request containing only package names, version numbers, and ecosystem identifiers:
+
+<OsvPayloadPreview />
+
+To keep repeated runs fast and work offline, Rustywoof caches OSV results on disk. If you ever want to clear the local cache and force a fresh sync, run `woof cache clean`.
+
+## Tracing Where a Package Came From (`woof sniff`)
+
+When `woof audit` reports that an unfamiliar package deep in your dependency tree has a vulnerability, your first question is usually: *"Which of my dependencies installed this?"*
+
+Run `woof sniff <package-name>` to print the dependency path from your root project down to that package:
+
+```bash
+woof sniff django
+```
+
+```text
+Dependency trace for django:
+django@6.1.1
+├── code@0.1.0 (devDependencies)
+└── server@0.1.0 (dependencies)
+
+Found 1 version of django
+```
+
+Or run `woof sniff` without arguments to view your project's full dependency tree:
+
+```bash
+woof sniff
+```
+
+```text
+Legend: production dependency, optional only, dev only
+
+project-name@0.1.0 /path/to/project-name
+  ├── next@16.4.3
+  ├── fumadocs-ui@16.17.9
+  ├── fumadocs-core@16.17.9
+  ├── react-dom@19.3.1
+  ├── react@19.3.1
+  │
+  │   devDependencies:
+  ├── @ianramy/rustywoof@0.3.0
+  ├── @types/mdx@2.0.14
+  ├── @types/node@26.6.6
+  ├── @types/react@19.3.0
+  ├── @types/react-dom@19.3.0
+  └── typescript@7.0.2
+```
+
+For a specific transitive package trace:
+
+```bash
+woof sniff fumadocs-core
+```
+
+```text
+Dependency trace for fumadocs-core:
+fumadocs-core@16.17.9
+├── project-name@0.1.0 (dependencies)
+└─┬ fumadocs-ui@16.17.9
+   └── project-name@0.1.0 (dependencies)
+
+Found 1 version of fumadocs-core
+```
+
+Once you know what needs updating, you can run `woof remediate <package> <fixed-version>` to update the package to a patched release.

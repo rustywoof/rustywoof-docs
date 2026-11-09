@@ -1,0 +1,49 @@
+---
+title: "Custom Rules"
+description: "Extend Rustywoof with custom token prefixes and linear-time regular expressions in .woof.toml."
+---
+
+Rustywoof is distributed with dozens of built-in rules for major cloud providers (AWS, GCP, Azure, Stripe, Slack, GitHub). When your team uses internal service tokens or custom API key formats, you can add `[[rules]]` blocks directly in `.woof.toml`.
+
+## Rule Anatomy
+
+A custom rule must contain an `id` and `description`. It should also contain either a `prefix`, a `pattern`, or ideally, both.
+
+```toml
+[[rules]]
+id = "corp-internal-api-key"
+description = "Acme Corp Internal Service Token"
+
+# The literal string prefix. This is injected into the Aho-Corasick automaton.
+# It is evaluated in linear time. ALWAYS define a prefix if your token has a static starting sequence.
+prefix = "acme_live_"
+
+# The regular expression pattern. This is evaluated ONLY if the prefix matches.
+# It validates the remainder of the token.
+pattern = "^acme_live_[a-zA-Z0-9]{32}$"
+
+# (Optional) Override the global entropy threshold for this specific rule.
+# Useful if your custom token is strictly alphanumeric and has lower natural entropy.
+min_entropy = 3.8
+```
+
+## Best Practices for Custom Rules
+
+### 1. The Power of the Prefix
+The most common mistake when writing custom rules is defining a complex `pattern` without a `prefix`. 
+
+If a rule only contains a regex pattern, Rustywoof cannot use the Aho-Corasick DFA. It is forced to run the regex against every line of code in your repository, drastically degrading performance. Always enforce a static prefix for internal company tokens (e.g., `companyname_env_...`) and define it in your rule.
+
+### 2. Bounding your Regex
+Rustywoof uses the linear-time `regex` crate, which prevents catastrophic backtracking. However, unbound regexes can still cause inaccurate matches. Always use anchors (`^`, `$`) or word boundaries (`\b`) where applicable, or rely on Rustywoof's internal token extraction boundary logic.
+
+### Example: RSA Private Keys
+If you need to detect a generic block of text that lacks a specific short prefix, you can capture the header.
+
+```toml
+[[rules]]
+id = "generic-rsa-private-key"
+description = "Unencrypted RSA Private Key Block"
+prefix = "-----BEGIN RSA PRIVATE KEY-----"
+pattern = "-----BEGIN RSA PRIVATE KEY-----[A-Za-z0-9+/=\\s]+-----END RSA PRIVATE KEY-----"
+```

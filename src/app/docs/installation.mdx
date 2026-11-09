@@ -1,0 +1,116 @@
+---
+title: "Installation"
+description: "Install the Rustywoof CLI on Linux, macOS, or Windows using your preferred package manager."
+---
+
+Rustywoof ships as a single compiled binary named `woof`. You can install it globally on your workstation or add it as a development dependency inside an existing Rust, Node.js, or Python project.
+
+## Choose an Installation Method
+
+Pick the package manager that matches your environment:
+
+<Tabs items={["Cargo", "PyPI", "Node", "Shell"]}>
+<Tab value="Cargo">
+
+If you have the Rust toolchain (`cargo`) installed, compile and install the binary directly from crates.io:
+
+```bash
+cargo install rustywoof
+```
+
+Cargo places the compiled `woof` binary inside `~/.cargo/bin/`. Make sure that directory is in your shell `PATH`.
+
+</Tab>
+<Tab value="PyPI">
+
+Rustywoof publishes pre-built wheels to PyPI so you do not need a Rust compiler installed. Using `uv` or `pipx` is recommended so `woof` is available globally:
+
+```bash
+# Using uv
+uv tool install rustywoof
+
+# Using pipx
+pipx install rustywoof
+
+# Or inside an active virtual environment with pip
+pip install rustywoof
+```
+
+</Tab>
+<Tab value="Node">
+
+Node wrappers download the right binary for your operating system and CPU architecture:
+
+```bash
+# Install globally
+npm install -g @ianramy/rustywoof
+pnpm add -g @ianramy/rustywoof
+yarn global add @ianramy/rustywoof
+
+# Or install as a project devDependency
+npm i -D @ianramy/rustywoof
+pnpm add -D @ianramy/rustywoof
+bun add -d @ianramy/rustywoof
+deno add --dev npm:@ianramy/rustywoof
+```
+
+</Tab>
+<Tab value="Shell">
+
+On macOS, Linux, or Windows (PowerShell), download the pre-compiled binary directly without any language runtime:
+
+```bash
+# macOS and Linux
+curl --proto "=https" --tlsv1.2 -sSf https://sh.rustywoof.dev | sh
+```
+
+```powershell
+# Windows PowerShell
+iwr -useb https://sh.rustywoof.dev/win | iex
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="info">
+  Need a raw archive for an air-gapped runner or Docker image? You can download platform binaries directly from [GitHub Releases](https://github.com/ianramy/rustywoof/releases).
+</Callout>
+
+## Verify Your Setup
+
+After installation finishes, open a terminal and check that `woof` responds:
+
+```bash
+woof version
+```
+
+You should see the installed version printed to your terminal (for example, `woof 0.3.0`).
+
+## Run Your First Check
+
+Navigate to any project directory on your machine and run a quick scan:
+
+```bash
+cd /path/to/your/project
+
+# 1. Create a starter .woof.toml file
+woof init
+
+# 2. Check your files for exposed keys and audit your lockfile
+woof patrol
+```
+
+## Enable Shell Autocompletion (Optional)
+
+To get tab-completion for `woof` subcommands and flags in your terminal, use `woof generate`:
+
+```bash
+# Bash
+woof generate bash > ~/.local/share/bash-completion/completions/woof
+
+# Zsh
+woof generate zsh > ~/.zsh/completion/_woof
+
+# Fish
+woof generate fish | source
+```

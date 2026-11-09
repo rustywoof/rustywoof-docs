@@ -1,0 +1,89 @@
+---
+title: "The .woof.toml Configuration File"
+description: "Configure folder exclusions, worker threads, Shannon entropy sensitivity, false-positive suppressions, and OSV severity thresholds."
+---
+
+The `.woof.toml` file serves as the definitive configuration source for Rustywoof. When placed at the root of your repository, it guarantees that all developers and CI/CD runners adhere to the same scanning thresholds, custom rules, and suppressions.
+
+Generate a boilerplate file using:
+```fish
+woof init
+```
+
+## Core Configuration
+
+The `[core]` block controls global scanner behavior, primarily focusing on what files and directories should be entirely excluded from memory mapping and traversal.
+
+```toml
+[core]
+# Directories to completely ignore during 'scan' and 'audit'.
+# Rustywoof uses standard glob patterns.
+excludes = [
+  "node_modules/", 
+  "dist/", 
+  ".git/", 
+  "coverage/",
+  "**/*.min.js",
+  "**/*.lock" # Excluded from secret scanning, but 'audit' still reads them
+]
+
+# Defines the number of worker threads. Default is 0 (auto-detect based on CPU cores).
+threads = 0
+```
+
+## Scanner Tuning
+
+The `[scanner]` block adjusts the heuristic engine, specifically how it handles generic Shannon Entropy analysis and file size limits.
+
+```toml
+[scanner]
+# Threshold for Shannon Entropy checks. 
+# 3.5 = Aggressive (will catch more, but higher false positive rate)
+# 4.5 = Balanced (captures Base64 tokens)
+# 5.0 = Strict (captures only highly randomized cryptographic keys)
+entropy_threshold = 4.5
+
+# Maximum file size to scan (in megabytes). Files larger than this are skipped 
+# to prevent memory exhaustion on massive binaries or SQL dumps.
+max_file_size_mb = 15
+```
+
+## Suppressions (False Positives)
+
+The `[ignore-paths]` block allows you to explicitly whitelist false positives. 
+
+<Callout type="error">
+  **Never commit actual production secrets to this block.** Use this strictly for dummy test tokens, cryptographic fixtures, or file hashes that happen to trigger the entropy threshold.
+</Callout>
+
+```toml
+[ignore-paths]
+# Ignore specific literal strings across the entire codebase
+secrets = [
+  "AKIAIOSFODNN7EXAMPLE",               # Standard AWS mock key
+  "eyJhbGciOiJIUzI1NiJ9.test.mock"      # Unit test JWT
+]
+
+# Ignore specific files that contain legitimate high-entropy data
+files = [
+  "tests/fixtures/mock_data.json",
+  "src/crypto/constants.rs"
+]
+```
+
+## Audit Thresholds
+
+The `[audit]` block tunes the Supply Chain Audit behavior, allowing you to ignore irrelevant historical CVEs or adjust the CI/CD failure threshold.
+
+```toml
+[audit]
+# Minimum severity level to return an exit code 1 (low, medium, high, critical)
+fail_on = "high"
+
+# Explicitly ignore specific OSV or CVE identifiers.
+# Useful if a vulnerability is disputed, or if you have implemented a local mitigation.
+ignore_cves = [
+  "CVE-2023-12345", # Disputed prototype pollution in unused dev dependency
+  "GHSA-x213-abc1"  # Mitigated via reverse proxy rules
+]
+```

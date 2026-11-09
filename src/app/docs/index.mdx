@@ -1,0 +1,50 @@
+---
+title: "Overview"
+description: "Learn what Rustywoof does, how it protects your repository, and how to run your first scan."
+---
+
+Rustywoof (`woof`) is a command-line security auditor written in Rust. It solves two everyday problems for software teams:
+
+1. **Secret Scanning (`woof scan` & `woof check`):** It reads the files in your project to make sure you haven't accidentally pasted an API key, database password, or private token into your source code.
+2. **Supply Chain Auditing (`woof audit` & `woof sniff`):** It reads your project's lockfiles (`Cargo.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `uv.lock`, `poetry.lock`, or `requirements.txt`) and checks every installed package version against the public [Open Source Vulnerability (OSV)](https://osv.dev) database.
+
+Everything runs locally on your machine. Rustywoof never uploads your source code or file paths to any external server.
+
+## How It Fits Into Your Workflow
+
+If you are brand new to Rustywoof, here is how developers typically use it day to day:
+
+<Steps>
+<Step>
+### Initialize a config file (Optional)
+Run `woof init` in the root folder of your project. This creates a `.woof.toml` file where you can list folders to skip (like `node_modules/` or `target/`) and adjust sensitivity settings.
+</Step>
+
+<Step>
+### Scan your code and dependencies locally
+Run `woof patrol` to run both the dependency auditor and the secret scanner back-to-back, or run `woof scan` and `woof audit` individually while you work.
+</Step>
+
+<Step>
+### Block accidental leaks before `git commit`
+Run `woof hook install` once inside your Git repository. Rustywoof will install a pre-commit hook that checks staged files before a commit is created. If you accidentally leave a key in a file, the commit stops so you can remove the key before it ever enters your Git history.
+</Step>
+
+<Step>
+### Enforce checks in CI/CD
+Add `woof check .` and `woof audit` to your GitHub Actions or CI pipeline. If someone bypasses their local Git hook, `woof check` returns exit code `1` and stops the pull request from merging.
+</Step>
+</Steps>
+
+## Interactive Terminal Preview
+
+Switch between tabs below to see what `woof patrol` and `woof audit` look like when run in a terminal:
+
+<TerminalReplay />
+
+## Where to Go Next
+
+- **[Installation](/docs/installation):** Step-by-step instructions to install `woof` using Cargo, npm/pnpm/yarn/bun, uv/pipx, or a standalone shell script.
+- **[Core Concepts](/docs/concepts):** Plain-English explanations of how prefix matching, Shannon entropy, and lockfile auditing work under the hood.
+- **[CLI Reference](/docs/cli):** Every command, flag, exit code, and terminal example.
+- **[Configuration](/docs/configuration):** How to customize `.woof.toml`, ignore test fixtures, and write custom token rules.

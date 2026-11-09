@@ -1,0 +1,26 @@
+---
+title: "CLI Overview"
+description: "Complete reference for every Rustywoof command, flag, exit code, and usage example."
+---
+
+Rustywoof ships as a single binary named `woof`. Each subcommand handles a specific part of secret scanning, dependency auditing, or Git hook management.
+
+## Available Commands
+
+* [`init`](/docs/cli/init) - Initializes a local `.woof.toml` configuration file
+* [`scan`](/docs/cli/scan) - Scans a target directory for exposed cryptographic secrets and tokens
+* [`audit`](/docs/cli/audit) - Audits project lockfiles against the OSV vulnerability database
+* [`hook`](/docs/cli/hook) - Manages Git pre-commit hooks to prevent secret leakage
+* [`patrol`](/docs/cli/patrol) - Executes a full repository sweep (`audit` + `scan`)
+* [`sniff`](/docs/cli/sniff) - Analyzes the dependency graph to trace paths leading to a specific package
+* [`remediate`](/docs/cli/remediate) - Updates a vulnerable package to a patched release
+* [`cache`](/docs/cli/cache) - Manages the local OSV advisory cache
+* [`update`](/docs/cli/update) - Updates the Rustywoof binary to the latest version
+* [`generate`](/docs/cli/generate) - Generates shell completion scripts for `woof`
+* [`check`](/docs/cli/check) - CI/CD mode: Executes a strict scan and returns exit code `1` if violations are found
+* [`version`](/docs/cli/version) - Displays version information
+
+## Global Options
+
+* `-h, --help` - Print help
+* `-V, --version` - Print version

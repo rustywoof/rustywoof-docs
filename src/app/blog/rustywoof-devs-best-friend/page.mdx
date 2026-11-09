@@ -1,0 +1,230 @@
+import Image from "next/image";
+import { ShowAuthorBadge } from "@/components/blog";
+import { ShowActionLink, ShowCodeWindow, ShowTerminalWindow } from "@/components/ui";
+import { BLOG_POSTS, MAINTAINER } from "@/lib";
+
+export const metadata = {
+	title: "Rustywoof: Dev's Best Friend | Rustywoof Blog",
+	description:
+		"I built a small local tool in Rust that catches leaked keys and checks your lockfiles for known vulnerabilities. Here is why.",
+};
+
+export const post = BLOG_POSTS[0];
+
+<article className="mx-auto flex w-full max-w-5xl flex-col gap-12 py-6">
+	<header className="flex flex-col gap-6 border-b border-(--border) pb-10">
+		<div>
+			<ShowActionLink href="/blog">Back to Blog</ShowActionLink>
+		</div>
+		<div className="flex flex-wrap gap-3">
+			<ShowActionLink href="/blog/tags/release">#release</ShowActionLink>
+			<ShowActionLink href="/blog/tags/feature">#feature</ShowActionLink>
+			<ShowActionLink href="/blog/tags/rust">#rust</ShowActionLink>
+			<ShowActionLink href="/blog/tags/announcement">#announcement</ShowActionLink>
+		</div>
+		<h1 className="m-0 text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight text-(--text-primary)">
+			Rustywoof: Dev&apos;s Best Friend
+		</h1>
+		<div className="m-0 max-w-4xl text-xl sm:text-2xl leading-relaxed text-(--text-secondary)">
+			I was coding when the March 2026 attacks hit, and it humbled me. So I built one small tool that checks your code for leaked passwords and keys, and checks the libraries you use for known problems. It scans 21,000 files in 2.42 seconds.
+		</div>
+		<ShowAuthorBadge author={MAINTAINER} date="9th Nov 2026" readTime="8 min read" />
+	</header>
+
+	<figure className="m-0 flex flex-col gap-3">
+		<div className="relative aspect-16/9 w-full overflow-hidden rounded-2xl border border-(--border) bg-(--surface-raised) shadow-(--rw-window-shadow)">
+			<Image
+				src={post.coverImage}
+				alt={post.coverAlt}
+				fill
+				priority
+				sizes="(max-width: 1200px) 100vw, 1024px"
+				className="object-cover"
+			/>
+		</div>
+		<figcaption className="text-center font-mono text-sm text-(--text-secondary)">
+			{post.coverAlt} · {post.coverCredit}
+		</figcaption>
+	</figure>
+
+	<div className="flex flex-col gap-8 text-lg sm:text-xl leading-[1.85] text-(--text-primary)">
+		<div>
+			In March 2026 I was in the middle of a normal coding session when the news started coming in. Popular packages had been hijacked. Developer accounts were taken over. Keys that someone had pasted into a file by mistake were being found and used within minutes. I closed my laptop lid and just sat there for a while. I kept asking myself one thing: how many of my own projects had the same problem and I just didn&apos;t know?
+		</div>
+
+		<div>
+			If you are not a developer, here is the short version. Software is built from thousands of small pieces written by strangers. If one piece goes bad, everything built on top of it can go bad too. And developers sometimes leave secret passwords sitting inside their code, a bit like leaving your house key under the doormat. Attackers know exactly where to look.
+		</div>
+
+		<div>
+			I went looking for tools to check my work. There are good ones, but each does one small job. For a project that mixes Rust, TypeScript and Python, I needed three or four different tools (<code>npm audit</code>, <code>cargo audit</code>, <code>pip-audit</code>) just to check my dependencies. I wanted one tool that does it all in a single run, so I built it.
+		</div>
+
+		<blockquote className="my-2 rounded-r-xl border-l-4 border-(--accent) bg-(--surface-raised) px-5 sm:px-8 py-5 sm:py-6 text-lg sm:text-xl italic text-(--text-secondary)">
+			&ldquo;A security tool only works if it is faster than your patience. If checking takes 15 seconds, people skip it with <code>--no-verify</code>. I have done it myself.&rdquo;
+		</blockquote>
+
+		<h2 className="mt-4 mb-0 text-3xl sm:text-4xl font-bold tracking-tight">
+			Why Most Scanners Feel Slow
+		</h2>
+
+		<div>
+			Most secret scanners take a long list of patterns and test every single line of every file against all of them. Add more files or more patterns and the wait grows. But here is the thing. Nearly every real key starts with a fixed beginning. AWS keys start with <code>AKIA</code>, GitHub tokens start with <code>ghp_</code>, and Stripe keys start with <code>sk_live_</code>.
+		</div>
+
+		<div>
+			So Rustywoof does not read everything closely. It first sweeps your files once, looking only for those known beginnings, using a method called <strong>Aho-Corasick</strong>. Think of scanning a whole library for a handful of book titles instead of reading every page. If a file has none of them, I skip it. If one shows up, I look closer. I also measure how random the text looks (this is called Shannon entropy), because real keys look messy and fake ones like <code>AKIA_EXAMPLE_TOKEN</code> don&apos;t. That keeps the false alarms down.
+		</div>
+
+		<div>
+			Here is the kind of mistake it catches. Someone pastes a GitHub token straight into a file to &ldquo;just test something quickly&rdquo; and forgets about it. Every developer has done this at least once. Line 4 below is the problem.
+		</div>
+
+		<ShowCodeWindow
+			filename="src/auth.ts"
+			badge="TypeScript"
+			lines={[
+				{ line: 1, text: 'import { createClient } from "./client";' },
+				{ line: 2, text: "" },
+				{ line: 3, text: "// Hardcoded token committed by mistake" },
+				{
+					line: 4,
+					text: 'export const GITHUB_PAT = "ghp_0th1sI54n3X4MPL3F0rAg1th4BPAt0k3nK3y";',
+					danger: true,
+				},
+				{ line: 5, text: "export const api = createClient({ token: GITHUB_PAT });" },
+			]}
+		/>
+
+		<div>
+			Now I run <code>woof scan .</code> on the project. It reads 21,341 files, about 577 MiB, and it still finishes in 2.42 seconds. It tells you the file, the line, the column, and what kind of secret it found. It also hides the key in its own report, so the scanner never becomes the next leak.
+		</div>
+
+		<ShowTerminalWindow
+			label="Scan"
+			title="woof scan . across 21,341 files (577.58 MiB)"
+			lines={[
+				{ id: "s1", text: "$ woof scan .", tone: "accent" },
+				{ id: "s2", text: "[INFO] Indexing repository...", tone: "muted" },
+				{
+					id: "s3",
+					text: "Scanning ├── [████████████] 100% | 577.58 MiB @ 238.51 MiB/s | 21,341 files",
+					tone: "accent",
+				},
+				{ id: "s4", text: "[INFO] Sweep complete. Analyzed 21,341 files in 2.42s.", tone: "muted" },
+				{ id: "s5", text: "[CRITICAL] Secret scan failed! Found 1 exposed secret.", tone: "danger" },
+				{
+					id: "s6",
+					text: "× [CRITICAL] Secret Detected: GitHub Personal Access Token",
+					tone: "danger",
+				},
+				{ id: "s7", text: "╭─[./src/auth.ts:4:27]" },
+				{ id: "s8", text: "4 │ export const GITHUB_PAT = ****************************************;" },
+				{ id: "s9", text: "·                           ╰── Exposure found here", tone: "danger" },
+				{ id: "s10", text: "╰────" },
+			]}
+		/>
+
+		<div>
+			If you are not technical, think of it as a metal detector for your code. It beeps when it finds something that should never have been there, and it points to the exact spot. It works the same way for Rust and Python projects, and it knows about AWS keys and Google Cloud keys too.
+		</div>
+
+		<h2 className="mt-4 mb-0 text-3xl sm:text-4xl font-bold tracking-tight">
+			Checking Your Libraries Against Known Problems
+		</h2>
+
+		<div>
+			The dangerous stuff is rarely the library you picked yourself. It is usually something three or four layers down that you have never heard of. So <code>woof audit</code> does not guess from loose version ranges in <code>package.json</code> or <code>Cargo.toml</code>. It reads the exact versions you are really using from <code>Cargo.lock</code>, <code>package-lock.json</code>, <code>pnpm-lock.yaml</code>, <code>uv.lock</code> and <code>poetry.lock</code>. Then it asks <code>api.osv.dev</code>, a public list of known vulnerabilities, about all of them in one request.
+		</div>
+
+		<div>
+			Here is a real run on a tiny shop project with just three libraries. All three had known problems. For each one you get the version you are on, how serious it is, and the exact command to fix it.
+		</div>
+
+		<ShowTerminalWindow
+			label="Audit"
+			title="woof audit on a package.json with 3 dependencies"
+			lines={[
+				{ id: "a1", text: "$ woof audit", tone: "accent" },
+				{ id: "a2", text: "[INFO] Initiating multi-ecosystem lockfile audit...", tone: "muted" },
+				{ id: "a3", text: "[INFO] Extracted 3 dependencies across 1 ecosystems.", tone: "muted" },
+				{ id: "a4", text: "Cross-referencing CVEs: querying OSV for 3 packages", tone: "accent" },
+				{ id: "a5", text: "", tone: "muted" },
+				{ id: "a6", text: "Package    axios", tone: "danger" },
+				{ id: "a7", text: "Version    1.5.0", tone: "muted" },
+				{ id: "a8", text: "Ecosystem  npm", tone: "muted" },
+				{ id: "a9", text: "Severity   8.7 (HIGH)", tone: "danger" },
+				{
+					id: "a10",
+					text: "Threats    CVE-2026-44494, GHSA-35jp-ww65-95wh, CVE-2026-44495, GHSA-3g43-6gmg-66jw (+ more)",
+					tone: "danger",
+				},
+				{ id: "a11", text: "Published  29 May 2026", tone: "muted" },
+				{ id: "a12", text: "Status     Upgrade available (1.16.0, 1.15.2, 0.31.1)", tone: "accent" },
+				{ id: "a13", text: "", tone: "muted" },
+				{ id: "a14", text: "Learn more at: https://osv.dev/vulnerability/CVE-2026-44494", tone: "accent" },
+				{
+					id: "a15",
+					text: "help: Upgrading may break peer dependencies or parent requirements. Analyze dependency paths first.",
+					tone: "muted",
+				},
+				{ id: "a16", text: "Command: woof sniff axios", tone: "accent" },
+				{ id: "a17", text: "Apply the fixed version:", tone: "muted" },
+				{ id: "a18", text: "Command: woof remediate axios 1.16.0", tone: "accent" },
+				{ id: "a19", text: "", tone: "muted" },
+				{ id: "a20", text: "Package    lodash", tone: "danger" },
+				{ id: "a21", text: "Version    4.17.15", tone: "muted" },
+				{ id: "a22", text: "Severity   8.1 (HIGH)", tone: "danger" },
+				{ id: "a23", text: "Status     Upgrade available (4.17.21, 4.17.19, 4.17.20)", tone: "accent" },
+				{ id: "a24", text: "Command: woof remediate lodash 4.17.21", tone: "accent" },
+				{ id: "a25", text: "", tone: "muted" },
+				{ id: "a26", text: "Package    zod", tone: "danger" },
+				{ id: "a27", text: "Version    3.23.8", tone: "muted" },
+				{ id: "a28", text: "Severity   7.5 (HIGH)", tone: "danger" },
+				{ id: "a29", text: "Status     Upgrade available (4.6.6)", tone: "accent" },
+				{ id: "a30", text: "Command: woof remediate zod 4.6.6", tone: "accent" },
+				{ id: "a31", text: "", tone: "muted" },
+				{ id: "a32", text: "3 vulnerabilities found", tone: "danger" },
+				{ id: "a33", text: "Severity: 0 critical, 3 high, 0 medium, 0 low", tone: "muted" },
+				{
+					id: "a34",
+					text: "✗ Audit completed in 38.77s. Vulnerabilities detected, see report above.",
+					tone: "danger",
+				},
+			]}
+		/>
+
+		<div>
+			If you are not technical, read it like a health check for your software. Each block is one ingredient, how risky it is, and what to swap it for. If you are a developer, the <code>woof sniff</code> line helps you see where the package sits in your tree before you upgrade, so the fix does not break something else.
+		</div>
+
+		<h2 className="mt-4 mb-0 text-3xl sm:text-4xl font-bold tracking-tight">
+			Your Code Stays On Your Machine
+		</h2>
+
+		<div>
+			Your code, file names and environment variables never leave your computer. When Rustywoof finds a secret, it hides most of it in the report, so you are not leaking it again by accident. The Playground on this site runs the very same scanner inside your browser tab, so nothing gets uploaded there either.
+		</div>
+
+		<div>
+			I am one person building this, and I am still learning as I go. If it saves you from one bad commit, it was worth it. Try it on a project and tell me what you find.
+		</div>
+
+		<div className="mt-6 flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-(--border-strong) bg-(--surface-raised) p-5 sm:p-8">
+			<div className="flex flex-col gap-2">
+				<strong className="text-2xl font-bold text-(--text-primary)">
+					Try Rustywoof on your project.
+				</strong>
+				<span className="text-base text-(--text-secondary)">
+					Install it in a few seconds, or drop in a lockfile and test it right in the browser.
+				</span>
+			</div>
+			<div className="flex flex-wrap items-center gap-4">
+				<ShowActionLink href="/docs/installation" variant="primary">
+					Install Rustywoof
+				</ShowActionLink>
+				<ShowActionLink href="/playground">Open Playground</ShowActionLink>
+			</div>
+		</div>
+	</div>
+</article>

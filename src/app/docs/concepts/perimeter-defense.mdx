@@ -1,0 +1,63 @@
+---
+title: "Workflow Checkpoints"
+description: "Set up Rustywoof in Git pre-commit hooks, CI/CD pipelines, and scheduled repository sweeps."
+---
+
+A security scanner only helps if it runs automatically. Rustywoof is designed to sit at natural checkpoints in your development workflow so leaked keys and vulnerable packages are caught early.
+
+## Catching Secrets Before `git commit`
+
+The easiest time to fix an exposed API key is while it is still only on your laptop, before `git commit` writes it into your repository history. Once a secret is committed and pushed, simply deleting the line in a second commit does not remove it from Git history—you have to revoke and replace the key.
+
+Run `woof hook install` once inside your repository:
+
+```bash
+woof hook install
+```
+
+This writes a Git pre-commit hook at `.git/hooks/pre-commit`. Every time you run `git commit`:
+
+- Rustywoof scans the staged changes.
+- If a secret is found, the commit is blocked and the offending file and line number are printed (with the secret value masked).
+- You can move the secret into an ignored `.env` file and commit again cleanly.
+
+If you ever need to remove the hook, run `woof hook remove`.
+
+## Blocking Bad Pull Requests in CI/CD
+
+Because any developer can bypass a local Git hook by running `git commit --no-verify`, your Continuous Integration (CI) server should act as the final gatekeeper before code merges into `main`.
+
+In CI scripts, use `woof check` instead of `woof scan`:
+
+- `woof scan` is meant for interactive terminal exploration and exits with code `0` even if findings are printed.
+- `woof check` is built for automation: it outputs machine-readable JSON diagnostics and returns exit code `1` the moment a secret is found, immediately failing the CI step.
+
+## Example GitHub Actions Workflow
+
+Save this file as `.github/workflows/security.yml` in your repository:
+
+```yaml
+name: Security Audit
+on: [push, pull_request]
+
+jobs:
+  Rustywoof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rustywoof
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustywoof.dev | sh
+
+      - name: Check for hardcoded secrets
+        run: woof check .
+
+      - name: Audit lockfiles against OSV
+        run: woof audit --audit-level high
+```
+
+## Nightly Sweeps for Dormant Repositories (`woof patrol`)
+
+Even if nobody pushes new code to a repository for weeks, new vulnerabilities are discovered in existing open-source packages every day.
+
+Running `woof patrol` executes both `woof audit` and `woof scan` in sequence. Scheduling `woof patrol` in a nightly or weekly CI cron job lets your team know as soon as a newly published CVE affects one of your deployed lockfiles.
