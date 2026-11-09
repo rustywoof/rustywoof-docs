@@ -1,0 +1,57 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!!node_modules",
+			"!!.next",
+			"!!tsconfig.tsbuildinfo",
+			"!!scripts",
+			"!!public/wasm",
+			"!!out",
+			"!!pnpm-lock.yaml",
+			"!!PROMPT.md",
+			"!!SESSION.md",
+			"!!.source",
+			"!!SRC.md",
+			"!!public/icon.svg"
+		]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"complexity": {
+				"noBannedTypes": "error",
+				"noExtraBooleanCast": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noArrayIndexKey": "error"
+			},
+			"style": {
+				"noNonNullAssertion": "error",
+				"useImportType": "error"
+			},
+			"correctness": {
+				"noUnusedVariables": "error"
+			}
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	}
+}
