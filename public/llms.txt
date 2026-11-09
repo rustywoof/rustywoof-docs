@@ -1,0 +1,16 @@
+# Rustywoof Documentation
+
+Rustywoof is a CLI tool designed to detect exposed cryptographic credentials and compromised dependencies.
+
+## Key Capabilities
+- Secret Scanning: Aho-Corasick automaton for O(n) literal prefix matching.
+- Dependency Auditing: OSV network queries for Node, Rust, and Python lockfiles.
+- Perimeter Defense: Git pre-commit hook management.
+
+## Installation
+`curl -sSL https://rustywoof.dev/installer.sh | sh`
+
+## Documentation Index
+- /docs/cli : CLI Reference
+- /docs/concepts : Core Architecture & Threat Models
+- /docs/configuration : The .woof.toml File
