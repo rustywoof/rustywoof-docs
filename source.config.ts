@@ -16,6 +16,6 @@ export const docs = defineDocs({
 });
 
 export default defineConfig({
-	 // fills page.data.lastModified from git history
+	// fills page.data.lastModified from git history
 	plugins: [lastModified()],
 });
