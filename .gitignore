@@ -8,3 +8,5 @@ out/
 .env.production.local
 coverage/
 target/
+next-env.d.ts
+.source/
